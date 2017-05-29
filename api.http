@@ -1,0 +1,16 @@
+# -*- restclient -*-
+#
+GET https://bismi.aidbox.io/fhir/Patient
+
+#
+POST https://bismi.aidbox.io/fhir/Patient
+Content-Type: application/json
+{"name": [{"use": "official", "given": ["anna"]}],
+ "birthDate": "2017-4-28",
+ "resourceType": "Patient",
+ "active": true,
+ "telecom": [{"use": "mobile", "rank": 1, "value": "123", "system": "phone"}],
+ "gender": "female"}
+
+#
+DELETE https://bismi.aidbox.io/fhir/Patient/
