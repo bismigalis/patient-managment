@@ -10,20 +10,17 @@
 
 ;; initial state of app-db
 (def app-db
-  {:route :index
+  {:loading false
+   :route :index
    :patient-id nil ;;"bd2c15a6-fc57-4c5b-9abe-5cfb426368e2"
+   :token nil
+   :auth {;;:grant_type     "authorization_code"
+          :client-id      "5beus1JLVqz6N4aZ6AxVwZlQMpuL53cf"
+          :code-verifier  "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE"
+          :code-challenge "huVe5Sif9SgWtYkAgGw7CvEPQ6NI0AdBuSVp1DNWPLI"
+          :redirect-uri   "http://bismi.ru/callback"
 
+          }
    :form empty-form
-
-   :patients [#_{:resource {:id "bd2c15a6-fc57-4c5b-9abe-5cfb426368e2",
-                          :meta  {:extension  [{:url "fhir-request-method", :valueString "POST"}
-                                               {:url "fhir-request-uri", :valueUri "Patient"}],
-                                  :versionId "0743a8b2-b14c-4bf4-ab16-c3d608dad81c",
-                                  :lastUpdated "2017-05-26T15:19:56.526Z"},
-                          :name  [{:use "official", :given  ["Ruslan"]}],
-                          :active true,
-                          :gender "male",
-                          :telecom  [{:use "mobile", :rank 1, :value "+79787859975", :system "phone"}],
-                          :birthDate "1979-04-23",
-                          :resourceType "Patient"}}]
+   :patients []
    })

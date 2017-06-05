@@ -1,9 +1,10 @@
 (ns patient-managment.events
   (:require
-   [re-frame.core :refer [reg-event-db after dispatch]]
+   [re-frame.core :refer [reg-event-db after dispatch dispatch-sync]]
    [clojure.spec.alpha :as s]
    [patient-managment.db :as db :refer [app-db empty-form]]
    [patient-managment.api :as api]
+   [patient-managment.jwt :as jwt]
    ))
 
 ;; -- Interceptors ------------------------------------------------------------
@@ -26,19 +27,21 @@
 
 (reg-event-db
  :initialize-db
- validate-spec
  (fn [_ _]
    app-db))
 
 (reg-event-db
+ :set-loading
+ (fn [db [_ value]]
+   (assoc db :loading value)))
+
+(reg-event-db
  :set-route
- validate-spec
  (fn [db [_ value]]
    (assoc db :route value)))
 
 (reg-event-db
  :set-form-field
- validate-spec
  (fn [db [_ key value]]
    (assoc-in db [:form key] value)))
 
@@ -56,9 +59,48 @@
                 (let [patients (:entry (js->clj res :keywordize-keys true))]
                   (dispatch [:set-patients patients])
                   )))
+       (.catch #(print "AJAX ERROR:" %))
        )
    db))
 
+
+(reg-event-db
+ :get-access-token
+ (fn [db [_ code]]
+   (-> (js/fetch "https://bismi.eu.auth0.com/oauth/token"
+                   (clj->js {:method "POST"
+                             :headers {"Content-Type" "application/json"}
+                             :body (js/JSON.stringify (clj->js
+                                                       {:grant_type "authorization_code"
+                                                        :client_id (get-in db [:auth :client-id])
+                                                        :code code
+                                                        :code_verifier (get-in db [:auth :code-verifier])
+                                                        :redirect_uri (get-in db [:auth :redirect-uri])
+                                                        }))}))
+         (.then #(.json %))
+         (.then (fn [res]
+                  (let [token (js->clj res :keywordize-keys true)]
+                    ;;(pr "TOKEN:" token)
+                    (if (jwt/valid? (:id_token token))
+                      (do
+                        (dispatch-sync [:set-token token])
+                        (dispatch [:get-remote-patients])
+                        )
+                      (dispatch [:set-route :unauthorized])))
+                  ))
+         (.catch #(print "ERROR GET ACCES TOKEN: " %))
+         )
+   (assoc db :loading true)
+   )
+ )
+
+(reg-event-db
+ :set-token
+ (fn [db [_ token-data]]
+   (assoc db
+          :token token-data
+          )
+   ))
 
 (reg-event-db
  :set-patients
@@ -66,6 +108,7 @@
    (assoc db
           :patients patients
           :route :patients
+          :loading false
           )
    ))
 
@@ -89,12 +132,13 @@
               (dispatch [:add-patient (js->clj res :keywordize-keys true)])
               )
             ))
-   db))
+   (assoc db :loading true)))
 
 (reg-event-db
  :add-patient
  (fn [db [_ patient]]
    (-> db
        (update :patients conj {:resource patient})
-       (assoc :route :patients))
+       (assoc :route :patients
+              :loading false))
    ))

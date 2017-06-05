@@ -1,6 +1,17 @@
 (ns patient-managment.subs
   (:require [re-frame.core :refer [reg-sub]]))
 
+
+(reg-sub
+ :get-db
+  (fn [db _]
+    db))
+
+(reg-sub
+  :get-loading
+  (fn [db _]
+    (:loading db)))
+
 (reg-sub
   :get-current-route
   (fn [db _]

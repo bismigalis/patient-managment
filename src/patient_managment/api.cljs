@@ -4,7 +4,8 @@
 
 (defn create-patient [data]
   {:name [{:use "official",
-           :given [(:name data)]}]
+           :given [(:name data)]
+           :family [(:family data)]}]
 
    :birthDate (:birthday data)
    :resourceType "Patient"
